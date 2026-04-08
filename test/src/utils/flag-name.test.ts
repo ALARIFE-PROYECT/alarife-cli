@@ -1,121 +1,100 @@
 import assert from 'assert';
-import { test } from 'node:test';
+import { test, describe, it } from 'node:test';
 
 import { getBaseName, getOptionName } from '../../../src/utils/flag-name';
-import { Flag, Option } from '../../../src/model/Command';
+import { Flag, Option } from '../../../src/models/Command';
 
-/**
- * TEST getBaseName
- */
+describe('flag-name', () => {
+  describe('getBaseName', () => {
+    it('Check behavior without descriptiveType', () => {
+      const flag: Partial<Flag> = {
+        required: true
+      };
 
-test('Check behavior without descriptiveType', () => {
-  const flag: Partial<Flag> = {
-    required: true
-  };
+      const baseName = getBaseName(flag);
 
-  const baseName = getBaseName(flag);
+      assert.strictEqual(baseName, '');
+    });
 
-  assert.strictEqual(baseName, '');
-});
+    it('Check BaseName required', () => {
+      const flag: Partial<Flag> = {
+        descriptiveType: 'path',
+        required: true
+      };
 
-test('Check BaseName required', () => {
-  const flag: Partial<Flag> = {
-    descriptiveType: 'path',
-    required: true
-  };
+      const baseName = getBaseName(flag);
 
-  const baseName = getBaseName(flag);
+      assert.strictEqual(baseName, '<path>');
+    });
 
-  assert.strictEqual(baseName, '<path>');
-});
+    it('Check BaseName optional', () => {
+      const flag: Partial<Flag> = {
+        descriptiveType: 'path',
+        required: false
+      };
 
-test('Check BaseName optional', () => {
-  const flag: Partial<Flag> = {
-    descriptiveType: 'path',
-    required: false
-  };
+      const baseName = getBaseName(flag);
 
-  const baseName = getBaseName(flag);
+      assert.strictEqual(baseName, '[path]');
+    });
 
-  assert.strictEqual(baseName, '[path]');
-});
+    it('Check BaseName with variadic', () => {
+      const flag: Partial<Flag> = {
+        descriptiveType: 'path',
+        required: true,
+        variadic: true
+      };
 
-test('Check BaseName with variadic', () => {
-  const flag: Partial<Flag> = {
-    descriptiveType: 'path',
-    required: true,
-    variadic: true
-  };
+      const baseName = getBaseName(flag);
 
-  const baseName = getBaseName(flag);
+      assert.strictEqual(baseName, '<path...>');
+    });
+  });
 
-  assert.strictEqual(baseName, '<path...>');
-});
+  describe('getOptionName', () => {
+    it('Check getOptionName with only name', () => {
+      const option: Partial<Option> = {
+        name: 'extensions'
+      };
 
-/**
- * TEST getOptionName
- */
+      const optionName = getOptionName(option);
 
-test('Check getOptionName with only name', () => {
-  const option: Partial<Option> = {
-    name: 'extensions'
-  };
+      assert.strictEqual(optionName, '--extensions');
+    });
 
-  const optionName = getOptionName(option);
+    it('Check getOptionName with shortName and name', () => {
+      const option: Partial<Option> = {
+        shortName: 'ex',
+        name: 'extensions'
+      };
 
-  assert.strictEqual(optionName, '--extensions');
-});
+      const optionName = getOptionName(option);
 
-test('Check getOptionName with shortName and name', () => {
-  const option: Partial<Option> = {
-    shortName: 'ex',
-    name: 'extensions'
-  };
+      assert.strictEqual(optionName, '-ex, --extensions');
+    });
 
-  const optionName = getOptionName(option);
+    it('Check getOptionName with shortName, name and required', () => {
+      const option: Partial<Option> = {
+        shortName: 'ex',
+        name: 'extensions',
+        required: true
+      };
 
-  assert.strictEqual(optionName, '-ex, --extensions');
-});
+      const optionName = getOptionName(option);
 
-test('Check getOptionName with shortName, name and required', () => {
-  const option: Partial<Option> = {
-    shortName: 'ex',
-    name: 'extensions',
-    required: true
-  };
+      assert.strictEqual(optionName, '-ex, --extensions');
+    });
 
-  const optionName = getOptionName(option);
+    it('Check getOptionName with shortName, name and descriptiveType', () => {
+      const option: Partial<Option> = {
+        shortName: 'ex',
+        name: 'extensions',
+        descriptiveType: 'extensions'
+      };
 
-  assert.strictEqual(optionName, '-ex, --extensions');
-});
+      const optionName = getOptionName(option);
 
-test('Check getOptionName with shortName, name and descriptiveType', () => {
-  const option: Partial<Option> = {
-    shortName: 'ex',
-    name: 'extensions',
-    descriptiveType: 'extensions'
-  };
-
-  const optionName = getOptionName(option);
-
-  assert.strictEqual(optionName, '-ex, --extensions [extensions]');
-});
-
-// quiero porbar las dos excepciones del _setOption
-// cuando creo una opcion con descriptiveType, pero sin name o sin shortName, debe lanzar una excepcion
-
-test('Check _setOption with descriptiveType but without name', () => {
-  const option: Partial<Option> = {
-    descriptiveType: 'extensions'
-  };
-
-  try {
-    const name = getOptionName(option);
-    console.log("🚀 ~ name:", name)
-    // assert.fail('Expected error was not thrown');
-  } catch (error) {
-    // console.log('🚀 ~ error:', error);
-    // assert.strictEqual((error as Error).message, 'Option must have a name or a shortName if it has a descriptiveType');
-    console.log("🚀 ~ (error as Error).message:", (error as Error).message)
-  }
+      assert.strictEqual(optionName, '-ex, --extensions [extensions]');
+    });
+  });
 });

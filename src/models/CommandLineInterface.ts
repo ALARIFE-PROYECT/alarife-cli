@@ -3,11 +3,15 @@ import { Command, Version, Argument, Option } from './Command';
 import { getBaseName, getOptionName } from '../utils/flag-name';
 import { setDefault } from '../utils/flag-default';
 import { setChoices } from '../utils/flag-choices';
+import { basename, resolve } from 'node:path';
+import { CommandEvent, ParserFrom } from './CommandParser';
 
 export class ProgramLineInterface {
   #program: commander.Command;
 
   #commands: Array<commander.Command> = [];
+
+  #lastEvent: CommandEvent | undefined;
 
   constructor(command?: Command[], version?: Version) {
     this.#program = new commander.Command();
@@ -26,12 +30,18 @@ export class ProgramLineInterface {
    * @param command
    */
   #serVersion(version: Version, command: commander.Command) {
-    let name = getOptionName({
-      name: version.name,
-      shortName: version.shortName
-    });
+    if (typeof version === 'string') {
+      command.version(version);
+    } else if (typeof version === 'object') {
+      let name = getOptionName({
+        name: version.name,
+        shortName: version.shortName
+      });
 
-    command.version(version.version, name, version.description);
+      command.version(version.version, name, version.description);
+    } else {
+      throw new Error('Invalid version format');
+    }
   }
 
   /**
@@ -53,7 +63,7 @@ export class ProgramLineInterface {
    *
    * @param argument
    */
-  #setArgument(argument: Argument, command: commander.Command): void {
+  #addArgument(argument: Argument, command: commander.Command): void {
     if (!argument.descriptiveType) {
       throw new Error('Argument must have a descriptiveType');
     }
@@ -84,7 +94,7 @@ export class ProgramLineInterface {
    *
    * @param option
    */
-  #setOption(option: Option, command: commander.Command): void {
+  #addOption(option: Option, command: commander.Command): void {
     /**
      * Si la opción tiene un descriptiveType, debe tener un nombre o un nombre corto para poder generar el nombre correctamente
      *
@@ -144,17 +154,39 @@ export class ProgramLineInterface {
    * @param lineCommand
    * @param options
    * @param commandConfig
+   * lineCommand: string, options: Record<string, any>, commandConfig: Command
    */
-  #action(lineCommand: string, options: Record<string, any>, commandConfig: Command): void {
-    console.log('Line command: ', lineCommand);
-    console.log('Options: ', options);
+  #action(args: any[], options: Record<string, any>, command: commander.Command, commandConfig: Command): void {
+    const event: CommandEvent = {
+      args: args,
+      options: options
+    };
+
+    this.#lastEvent = event;
 
     if (commandConfig.action) {
-      commandConfig.action();
+      commandConfig.action(event, command, commandConfig);
     }
 
     if (commandConfig.path) {
-      console.log(`Path: ${commandConfig.path}`);
+      const path = commandConfig.path;
+
+      const actionPathFile = basename(path);
+      if (!actionPathFile || !actionPathFile.endsWith('.js')) {
+        throw new Error('Invalid action path. The file must be a JavaScript file.');
+      }
+
+      const actionModule = require(resolve(path));
+
+      if (
+        (!actionModule?.default && typeof actionModule.default === 'function') ||
+        (!actionModule?.handler && typeof actionModule.handler === 'function')
+      ) {
+        throw new Error('Invalid action module. The module must export a default function or a handler function.');
+      }
+
+      actionModule?.default?.(event, command, commandConfig);
+      actionModule?.handler?.(event, command, commandConfig);
     }
   }
 
@@ -169,36 +201,37 @@ export class ProgramLineInterface {
       this.#serVersion(command.version, commandInstance);
     }
 
-    command.arguments?.forEach((a) => this.#setArgument(a, commandInstance));
-    command.options?.forEach((o) => this.#setOption(o, commandInstance));
+    command.arguments?.forEach((a) => this.#addArgument(a, commandInstance));
+    command.options?.forEach((o) => this.#addOption(o, commandInstance));
 
     command.customHelp?.forEach((help) => {
       commandInstance.addHelpText(help.position, help.text);
     });
 
-    commandInstance.action((lineCommand: string, options: Record<string, any>) =>
-      this.#action(lineCommand, options, command)
-    );
+    commandInstance.action((...args: any[]) => {
+      const cmd: commander.Command = args.pop();
+      const options = args.pop();
+
+      this.#action(args, options, cmd, command);
+    });
 
     this.#commands.push(commandInstance);
   }
 
-  public setArgument(commandName: string, argument: Argument) {
+  public addArgument(commandName: string, argument: Argument) {
     const command = this.#findCommand(commandName);
-    this.#setArgument(argument, command);
+    this.#addArgument(argument, command);
   }
 
-  public setOption(commandName: string, option: Option) {
+  public addOption(commandName: string, option: Option) {
     const command = this.#findCommand(commandName);
-    this.#setOption(option, command);
+    this.#addOption(option, command);
   }
 
-  parse(args: string[]) {
+  parse(args: string[], from: ParserFrom = 'user'): CommandEvent {
     this.#commands.forEach((command) => this.#program.addCommand(command));
-    this.#program.parse(args);
-  }
+    this.#program.parse(args, { from: from });
 
-  opts(): Record<string, any> {
-    return this.#program.opts();
+    return this.#lastEvent ?? { args: [], options: {} };
   }
 }
