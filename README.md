@@ -39,6 +39,8 @@ This project is licensed under Apache-2.0. See the [LICENSE](./LICENSE) file for
 
 **Built with ❤️ by [Jose Eduardo Soria Garcia](mailto:alarifeproyect@gmail.com)**
 
+<sub>🌍 Product developed in Andalucia, España 🇪🇸</sub>
+
 *Part of the Alarife ecosystem*
 
 </div>

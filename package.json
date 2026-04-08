@@ -24,6 +24,9 @@
       ]
     }
   },
+  "keywords": [
+    "alarife"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ALARIFE-PROYECT/alarife-cli.git"
