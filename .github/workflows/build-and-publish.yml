@@ -17,6 +17,8 @@ jobs:
   publish-npm:
     name: Publish @alarife/cli
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     environment: publish-npm # Mismo nombre que el environment en GitHub y el Job
 
     steps:
@@ -32,7 +34,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
       - name: Install
