@@ -55,6 +55,10 @@ export const addCommand = (command: Command): void => {
  * @param argument
  */
 const _setArgument = (argument: Argument, command: commander.Command): void => {
+  if (!argument.descriptiveType) {
+    throw new Error('Argument must have a descriptiveType');
+  }
+
   let name = getBaseName({
     descriptiveType: argument.descriptiveType,
     required: argument.required,
@@ -82,6 +86,31 @@ const _setArgument = (argument: Argument, command: commander.Command): void => {
  * @param option
  */
 const _setOption = (option: Option, command: commander.Command): void => {
+  /**
+   * Si la opción tiene un descriptiveType, debe tener un nombre o un nombre corto para poder generar el nombre correctamente
+   *
+   * name: extensions
+   * descriptiveType: ExtensionsList
+   * Ejemplo: --extensions [ExtensionsList]
+   * Ejemplo: -ex, --extensions [ExtensionsList]
+   * Ejemplo: -ex [ExtensionsList]
+   */
+  if (option.descriptiveType && !option.name && !option.shortName) {
+    throw new Error('Option must have a name or a shortName if it has a descriptiveType');
+  }
+
+  /**
+   * Si la opción es variadic, debe tener un descriptiveType para poder generar el nombre correctamente
+   *
+   * name: extensions
+   * variadic: true
+   * descriptiveType: extensions
+   * Ejemplo: --extensions [extensions...]
+   */
+  if (!option.descriptiveType && option.variadic) {
+    throw new Error('Option must have a descriptiveType if it is variadic');
+  }
+
   let name = getOptionName(option);
 
   const newOption = new commander.Option(name, option.description);

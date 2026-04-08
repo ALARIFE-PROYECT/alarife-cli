@@ -1,5 +1,12 @@
 import commander from 'commander';
 
+export interface Version {
+  version: string;
+  name?: string;
+  shortName?: string;
+  description?: string;
+}
+
 export interface Default {
   description?: string;
   value: any;
@@ -45,13 +52,8 @@ export interface Option extends Flag {
   hook?: (value: any, previous: any) => any;
 }
 
-export interface Argument extends Flag {}
-
-export interface CommandVersion {
-  version: string;
-  name?: string;
-  shortName?: string;
-  description?: string;
+export interface Argument extends Flag {
+  descriptiveType: string; // se marca como obligatorio en argumentos
 }
 
 export interface CustomHelp {
@@ -62,7 +64,7 @@ export interface CustomHelp {
 export interface Command {
   name: string;
   description?: string;
-  version?: CommandVersion;
+  version?: Version;
 
   path?: string;
   action?: () => void;

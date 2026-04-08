@@ -13,7 +13,6 @@
 ## 📋 Table of Contents
 
 - [Installation](#-installation)
-...
 <!-- EXAMPLE: -->
 <!-- - [Commands](#-commands) -->
 <!-- - [Features](#-features) -->
@@ -22,7 +21,6 @@
 <!-- - [Architecture](#-architecture) -->
 <!-- - [Error Handling](#-error-handling) -->
 <!-- - [Advanced Examples](#-advanced-examples) -->
-...
 - [License](#-license)
 
 ## 🚀 Installation
