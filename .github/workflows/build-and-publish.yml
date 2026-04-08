@@ -35,13 +35,10 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: Install
-        working-directory: plugin
         run: npm ci
 
       - name: Build
-        working-directory: plugin
         run: npm run build
 
       - name: Publish
-        working-directory: plugin
         run: npm publish --access public --provenance
