@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  "@alarife/commander":
-    name: Publish @alarife/commander
+  "@alarife/cli":
+    name: Publish @alarife/cli
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -1,12 +1,12 @@
-# @alarife/commander - Tool for command management in Alarife.
+# @alarife/cli - Tool for command management in Alarife.
 
 <div align="center">
 
-[![NPM Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://www.npmjs.com/package/@alarife/commander)
+[![NPM Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://www.npmjs.com/package/@alarife/cli)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 
-**This tool is a command-line implementation of Commander.**
+**This tool is a command-line implementation of cli.**
 
 </div>
 
@@ -26,7 +26,7 @@
 ## 🚀 Installation
 
 ```bash
-npm install @alarife/commander --save-dev
+npm install @alarife/cli --save-dev
 ```
 
 ## 📄 License

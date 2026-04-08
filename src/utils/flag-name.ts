@@ -1,4 +1,4 @@
-import { Flag, Option } from '../model/Command';
+import { Flag, Option } from '../models/Command';
 
 const NAME_CHARACTERS = {
   shortName: '-',

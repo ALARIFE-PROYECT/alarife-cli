@@ -1,5 +1,5 @@
-import commander, { Argument } from 'commander';
-import { DefaultValue, Flag } from '../model/Command';
+import commander from 'commander';
+import { DefaultValue } from '../models/Command';
 
 export const setDefault = (flag: commander.Option | commander.Argument, defaultValue?: DefaultValue) => {
   if (defaultValue === undefined) {

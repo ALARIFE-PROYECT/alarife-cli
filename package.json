@@ -1,5 +1,5 @@
 {
-  "name": "@alarife/commander",
+  "name": "@alarife/cli",
   "version": "0.1.0",
   "author": "Soria Garcia, Jose Eduardo <alarifeproyect@gmail.com>",
   "license": "Apache-2.0",
@@ -26,11 +26,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ALARIFE-PROYECT/alarife-commander.git"
+    "url": "git+https://github.com/ALARIFE-PROYECT/alarife-cli.git"
   },
-  "homepage": "https://github.com/ALARIFE-PROYECT/alarife-commander#readme",
+  "homepage": "https://github.com/ALARIFE-PROYECT/alarife-cli#readme",
   "bugs": {
-    "url": "https://github.com/ALARIFE-PROYECT/alarife-commander/issues"
+    "url": "https://github.com/ALARIFE-PROYECT/alarife-cli/issues"
   },
   "scripts": {
     "build": "npx tsc --project tsconfig.build.json",
