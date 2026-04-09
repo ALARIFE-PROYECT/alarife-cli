@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   publish-npm:
-    name: Publish @alarife/cli
+    name: Publish alarife-cli
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -39,6 +39,9 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      - name: test
+        run: npm run test
 
       - name: Build
         run: npm run build

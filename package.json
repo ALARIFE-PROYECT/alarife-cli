@@ -1,7 +1,7 @@
 {
-  "name": "@alarife/cli",
+  "name": "alarife-cli",
   "description": "Command line interface tool for Alarife.",
-  "version": "0.4.0",
+  "version": "0.1.0",
   "author": "Soria Garcia, Jose Eduardo <alarifeproyect@gmail.com>",
   "license": "Apache-2.0",
   "private": false,
@@ -30,11 +30,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ALARIFE-PROYECT/alarife-cli.git"
+    "url": "git+https://github.com/ALARIFE-PROYECT/@alarife/cli.git"
   },
-  "homepage": "https://github.com/ALARIFE-PROYECT/alarife-cli#readme",
+  "homepage": "https://github.com/ALARIFE-PROYECT/@alarife/cli#readme",
   "bugs": {
-    "url": "https://github.com/ALARIFE-PROYECT/alarife-cli/issues"
+    "url": "https://github.com/ALARIFE-PROYECT/@alarife/cli/issues"
   },
   "scripts": {
     "build": "npx tsc --project tsconfig.build.json",

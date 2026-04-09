@@ -4,7 +4,7 @@ http://www.apache.org/licenses/
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-Copyright [2025] [Jose Eduardo Soria]
+Copyright [2025] [Soria Garcia, Jose Eduardo <alarifeproyect@gmail.com>]
 
 Licensed under the Apache License, Version 2.0 (the "License");  
 you may not use this file except in compliance with the License.  
@@ -22,7 +22,7 @@ limitations under the License.
 
 ## Project: alarife-project
 
-This component is part of the [ALARIFE-PROYECT](https://github.com/ALARIFE-PROYECT), 
+This component is part of the [ALARIFE-PROJECT](https://github.com/ALARIFE-PROYECT), 
 a framework for developing applications in the javascript ecosystem.
 
 All modules under the `@alarife` organization are licensed under the Apache License 2.0.
