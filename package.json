@@ -1,7 +1,7 @@
 {
   "name": "@alarife/cli",
   "description": "Command line interface tool for Alarife.",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "author": "Soria Garcia, Jose Eduardo <alarifeproyect@gmail.com>",
   "license": "Apache-2.0",
   "private": false,
