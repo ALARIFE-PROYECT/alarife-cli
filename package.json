@@ -30,17 +30,18 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ALARIFE-PROYECT/@alarife/cli.git"
+    "url": "git+https://github.com/ALARIFE-PROYECT/alarife-cli.git"
   },
-  "homepage": "https://github.com/ALARIFE-PROYECT/@alarife/cli#readme",
+  "homepage": "https://github.com/ALARIFE-PROYECT/alarife-cli#readme",
   "bugs": {
-    "url": "https://github.com/ALARIFE-PROYECT/@alarife/cli/issues"
+    "url": "https://github.com/ALARIFE-PROYECT/alarife-cli/issues"
   },
   "scripts": {
     "build": "npx tsc --project tsconfig.build.json",
     "test": "npx tsc --project tsconfig.test.json && node --test \"dist/test/**/*.test.js\""
   },
   "dependencies": {
+    "@alarife/commander": "~0.6",
     "tslib": "~2.8"
   },
   "devDependencies": {

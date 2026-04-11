@@ -1,8 +1,11 @@
-export function sum(param1: number, param2: number): number {
-    console.log(`Parameter 1: ${param1}`);
-    console.log(`Parameter 2: ${param2}`);
+#!/usr/bin/env node
+import { ProgramLineInterface } from '@alarife/commander';
+import { getPackage } from './utils/package';
+import { RUN_COMMAND } from './constants/commands';
 
-    return param1 + param2;
-}
+const TOOLS = [RUN_COMMAND];
 
-export const result = sum(20, 20);
+const packageJson = getPackage();
+const cli = new ProgramLineInterface(TOOLS, packageJson.version);
+
+cli.parse(process.argv, 'node');
