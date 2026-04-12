@@ -1,5 +1,7 @@
 import { Command, CommanderCommand, CommandEvent } from '@alarife/commander';
 import { Configuration } from '@alarife/configuration';
+import { displayBanner } from '../services/banner';
+import { ArgvConfigurationLoader, DefaultConfigurationLoader, EnvConfigurationLoader } from '../models/ConfigurationLoader';
 
 /**
  * command: run
@@ -13,16 +15,25 @@ export default (event: CommandEvent, command: CommanderCommand, commandConfig: C
   const {} = event.options;
 
   // mostrar banner
+  /**
+   * TODO: tiene que poderse le enviar informacion adicional al banner antes de mostrarlo
+   */
+  displayBanner('Welcome to Alarife CLI!');
 
   // cargar configuración
   const configuration = new Configuration();
 
-  configuration.addLoader();
-  configuration.addLoader();
-  configuration.addLoader();
+  configuration.addLoader(new DefaultConfigurationLoader(commandConfig.options));
+  configuration.addLoader(new EnvConfigurationLoader(commandConfig.options, event.options));
+  configuration.addLoader(new ArgvConfigurationLoader(commandConfig.options, event.options));
 
   configuration.load();
 
-  // ejecutar nuevo hilo con la configuración
+  /**
+   * TODO: tiene que usar el nuevo repo de threads
+   * Tiene que enviar la configuracion de forma segura
+   * 
+   */
+  // configuration.getState().export();
   
 };

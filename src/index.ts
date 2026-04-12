@@ -3,6 +3,9 @@ import { ProgramLineInterface } from '@alarife/commander';
 import { getPackage } from './utils/package';
 import { RUN_COMMAND } from './constants/commands';
 
+/**
+ * TODO: Tiene que poderse enviar configuracion de nuevas opciones antes de parsear el comando.
+ */
 const TOOLS = [RUN_COMMAND];
 
 const packageJson = getPackage();

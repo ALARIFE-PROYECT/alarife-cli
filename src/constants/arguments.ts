@@ -8,4 +8,6 @@ export const ARGV_SHORT_NAME_DEBUG = 'd';
 export const ARGV_NAME_WATCH = 'watch';
 
 export const ARGV_NAME_ENV_FILE = 'env-file';
+export const ARGV_NAME_ENV_FILE_CAMELCASE = 'envFile';
 export const ARGV_NAME_NO_BANNER = 'no-banner';
+export const ARGV_NAME_NO_BANNER_CAMELCASE = 'noBanner';
