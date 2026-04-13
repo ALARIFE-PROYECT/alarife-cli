@@ -1,81 +1,82 @@
-// import { EventEmitter } from 'node:events';
-// import { existsSync, readdirSync } from 'node:fs';
-// import { join } from 'node:path';
+import { join } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
+import { ProgramLineInterface } from '@alarife/commander';
 
-// import { ROOT_PATH } from '../constants/common';
-// import { DEPENDENCIES_RESOLVED_STATE, RESOLVING_TREE_DEPENDENCIES_STATE, TREE_DEPENDENCIES_RESOLVED_STATE } from '../constants/process-status';
+import { ROOT_PATH } from '../constants/common';
 
-// import { Dependency } from '../models/Dependency';
-// import { AlarifeConfiguration } from '../models/AlarifeConfiguration';
+import { getJsonFile } from '../utils/file';
 
-// import { getJsonFile } from '../utils/file';
-// import { commandProcessStatusEmitter } from './command-process-status';
+import { AlarifeConfiguration } from '../models/AlarifeConfiguration';
 
-// export const dependencies: Array<Dependency> = [];
 
-/**
- * Generates the dependency tree by reading the node_modules folder and looking for package.json and alarife.json files. Emits events to indicate the progress of the process.
- */
-// export const createDependencyTree = (): void => {
-//   commandProcessStatusEmitter.emit(RESOLVING_TREE_DEPENDENCIES_STATE);
+export interface Dependency {
+  name: string;
+  version: string;
+  alarifeConfig?: AlarifeConfiguration;
+}
 
-//   const path = join(ROOT_PATH, 'node_modules');
+export const dependencies: Dependency[] = [];
 
-//   if (!existsSync(path)) {
-//     throw new Error('The node_modules folder could not be found. Please run "npm install" before running the CLI.');
-//   }
+const _getFileValue = (path: string): Record<string, any> | undefined => {
+  try {
+    return getJsonFile(path);
+  } catch (error) {
+    return undefined;
+  }
+};
 
-//   const entries = readdirSync(path, { withFileTypes: true });
-//   for (const entry of entries) {
-//     if (entry.isDirectory()) {
-//       const packagePath = join(path, entry.name, 'package.json');
-//       const dependencyPackage = getJsonFile(packagePath);
+export const discoverPlugins = () => {
+  const path = join(ROOT_PATH, 'node_modules');
 
-//       const alarifeFilePath = join(path, entry.name, 'alarife.json');
+  if (!existsSync(path)) {
+    throw new Error('The node_modules folder could not be found. Please run "npm install" before running the CLI.');
+  }
 
-//       let alarifePackage: AlarifeConfiguration | undefined;
-//       try {
-//         alarifePackage = getJsonFile(alarifeFilePath) as AlarifeConfiguration;
-//       } catch (error) {
-//         // No alarife.json found, continue without it
-//       }
+  const entries = readdirSync(path, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const packageValue = _getFileValue(join(path, entry.name, 'package.json'));
+      const alarifeConfig = _getFileValue(join(path, entry.name, 'alarife.json'));
 
-//       dependencies.push({
-//         name: dependencyPackage.name,
-//         version: dependencyPackage.version,
-//         alarifeConfig: alarifePackage,
-//         resolve: false
-//       });
-//     }
-//   }
+      if (alarifeConfig && !packageValue) {
+        throw new Error(
+          `The package.json file is missing from the ${entry.name} dependency. Make sure to include the package.json file in the plugin.`
+        );
+      }
 
-//   commandProcessStatusEmitter.emit(TREE_DEPENDENCIES_RESOLVED_STATE);
-// };
+      if (alarifeConfig && packageValue) {
+        dependencies.push({
+          name: packageValue.name,
+          version: packageValue.version,
+          alarifeConfig: alarifeConfig as AlarifeConfiguration
+        });
+      }
+    }
+  }
+};
 
-/**
- * Checks dependency resolution by its name and updates its status.
- * ! esto marca la dependecia resuelta al setear una opcion o argumento, pero no sabe si ya cargo todas sus dependencias.
- */
-// export const resolveDependency = (packageName: string): void => {
-//   const dependencyIndex = dependencies.findIndex(dep => dep.name === packageName);
+export const setupPlugins = (program: ProgramLineInterface) => {
+  dependencies.forEach((dependency) => {
+    if (dependency.alarifeConfig?.cli?.setup) {
+      const setupPath = join(ROOT_PATH, 'node_modules', dependency.name, dependency.alarifeConfig.cli.setup);
+      
+      if (!existsSync(setupPath)) {
+        throw new Error(
+          `The setup script specified in the alarife.json file for the ${dependency.name} dependency could not be found. Make sure to provide a valid path to the setup script.`
+        );
+      }
 
-//   if (dependencyIndex === -1) {
-//     throw new Error(`Dependency ${packageName} not found in the node_modules folder.`);
-//   }
+      const setupModule = require(setupPath);
+      const setupFunction = setupModule.default || setupModule.setup;
 
-//   const dependency = dependencies[dependencyIndex];
+      if (typeof setupFunction !== 'function') {
+        throw new Error(
+          `The setup script specified in the alarife.json file for the ${dependency.name} dependency does not export a default function or a setup function. Make sure to export a valid setup function.`
+        );
+      }
 
-//   /**
-//    * Esto obliga a una resolucion de dependencia por adicion de option/agument en el cli. 
-//    * Se permite añadir varias option/agument por vez.
-//    */
-//   if(dependency.resolve === true) {
-//     throw new Error(`Dependency ${packageName} is already resolved.`);
-//   }
+      setupFunction(program);
+    }
+  });
+}
 
-//   dependency.resolve = true;
-
-//   if (dependencies.every(dep => dep.resolve)) {
-//     commandProcessStatusEmitter.emit(DEPENDENCIES_RESOLVED_STATE);
-//   }
-// };

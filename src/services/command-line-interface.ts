@@ -1,39 +1,22 @@
 import { join } from 'node:path';
-
-import { Argument, Command, CommandEvent, Option, ParserFrom, ProgramLineInterface } from '@alarife/commander';
+import { ProgramLineInterface } from '@alarife/commander';
 
 import { RUN_COMMAND } from '../constants/commands';
+
 import { getJsonFile } from '../utils/file';
-// import { resolveDependency } from './dependencies';
 
-const TOOLS = [RUN_COMMAND];
 
-export const cliPackageJson = getJsonFile(join(__dirname, '..', '..', 'package.json'));
+const COMMANDS = [RUN_COMMAND];
+let program: ProgramLineInterface;
 
-class Cli {
-  private program: ProgramLineInterface;
+export const setupCli = (): ProgramLineInterface => {
+  const cliPackageJson = getJsonFile(join(__dirname, '..', '..', 'package.json'));
 
-  constructor(command?: Command[], version?: string) {
-    this.program = new ProgramLineInterface(command, version);
-  }
+  program = new ProgramLineInterface(COMMANDS, cliPackageJson.version);
 
-  addCommand(command: Command): void {
-    this.program.addCommand(command);
-  }
+  return program;
+};
 
-  addArgument(packageName: string, commandName: string, ...argumentList: Argument[]): void {
-    this.program.addArgument(commandName, ...argumentList);
-    // resolveDependency(packageName);
-  }
-
-  addOption(packageName: string, commandName: string, ...optionList: Option[]): void {
-    this.program.addOption(commandName, ...optionList);
-    // resolveDependency(packageName);
-  }
-
-  parse(args: string[], from?: ParserFrom): CommandEvent {
-    return this.program.parse(args, from);
-  }
+export const parserCli = () => {
+  program.parse(process.argv, 'node');
 }
-
-export const CLI = new Cli(TOOLS, cliPackageJson.version);
