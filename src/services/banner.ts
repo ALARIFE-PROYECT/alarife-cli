@@ -8,13 +8,13 @@ import { DEFAULT_BANNER_PATH, ROOT_PATH } from '../constants/common';
  * - FONT: slant | standard
  *
  */
-export const displayBanner = (resume: string) => {
+export const displayBanner = (resume: string[]) => {
   const customBanner = `${ROOT_PATH}/banner.txt`;
   const path = existsSync(customBanner) ? customBanner : DEFAULT_BANNER_PATH;
   const banner = readFileSync(path, { encoding: 'utf8' });
 
   console.log(banner);
-  console.log(resume);
+  resume.forEach((line) => console.log(line));
 
   console.log('\n');
 };
