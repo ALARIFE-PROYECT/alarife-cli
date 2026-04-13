@@ -12,7 +12,7 @@ import {
 } from '../models/ConfigurationLoader';
 
 import { displayBanner } from '../services/banner';
-import { dependencies } from '../services/dependencies';
+import { dependencies } from '../services/dependency';
 
 
 /**
@@ -49,5 +49,7 @@ export default (event: CommandEvent, command: CommanderCommand, commandConfig: C
    * Tiene que enviar la configuracion de forma segura
    *
    */
-  // configuration.getState().export();
+  // const value= configuration.getState().export();
+  // const thread = new Thread();
+  // thread.getRcp().emit(value);
 };
