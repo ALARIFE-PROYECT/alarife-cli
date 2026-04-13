@@ -4,7 +4,7 @@ import { Argument, Command, CommandEvent, Option, ParserFrom, ProgramLineInterfa
 
 import { RUN_COMMAND } from '../constants/commands';
 import { getJsonFile } from '../utils/file';
-import { resolveDependency } from './dependencies';
+// import { resolveDependency } from './dependencies';
 
 const TOOLS = [RUN_COMMAND];
 
@@ -23,12 +23,12 @@ class Cli {
 
   addArgument(packageName: string, commandName: string, ...argumentList: Argument[]): void {
     this.program.addArgument(commandName, ...argumentList);
-    resolveDependency(packageName);
+    // resolveDependency(packageName);
   }
 
   addOption(packageName: string, commandName: string, ...optionList: Option[]): void {
     this.program.addOption(commandName, ...optionList);
-    resolveDependency(packageName);
+    // resolveDependency(packageName);
   }
 
   parse(args: string[], from?: ParserFrom): CommandEvent {
