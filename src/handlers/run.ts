@@ -42,7 +42,17 @@ export default (event: CommandEvent, command: CommanderCommand, commandConfig: C
     new EnvConfigurationLoader(commandConfig.options, event.options),
     new ArgvConfigurationLoader(commandConfig.options, event.options)
   );
-  configuration.load();
+  
+  const state = configuration.load();
+
+  const environment: Record<string, any> = {
+    CONFIGURATION_STATE: state.export()
+  };
+  state.forEach((option) => {
+    if(option.env) {
+      environment[option.env] = option.value;
+    }
+  });
 
   /**
    * TODO: tiene que usar el nuevo repo de threads

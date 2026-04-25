@@ -18,8 +18,12 @@ export class DefaultConfigurationLoader extends ConfigurationLoader {
 
   load(state: ConfigurationState): void {
     this.options.forEach((option: Option) => {
-      const key = [option.env, option.name, option.shortName].filter(Boolean) as string[];
-      state.setProperty({ key, value: option.defaultValue });
+      state.setProperty({
+        env: option.env,
+        argv: option.name,
+        shortArgv: option.shortName,
+        value: option.defaultValue
+      });
     });
   }
 }
@@ -69,9 +73,13 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
       const envConfig = this.loadEnvFile(envFilePath);
       this.options.forEach((option) => {
         if (option.env) {
-          const key = [option.env, option.name, option.shortName].filter(Boolean) as string[];
           const value = envConfig[option.env];
-          state.setProperty({ key, value });
+          state.setProperty({
+            env: option.env,
+            argv: option.name,
+            shortArgv: option.shortName,
+            value
+          });
         }
       });
     }
@@ -90,8 +98,6 @@ export class ArgvConfigurationLoader extends ConfigurationLoader {
 
   load(state: ConfigurationState): void {
     this.options.forEach((option: Option) => {
-      const key = [option.env, option.name, option.shortName].filter(Boolean) as string[];
-
       let value;
       if (option.name) {
         value = this.argvValues[option.name];
@@ -101,7 +107,7 @@ export class ArgvConfigurationLoader extends ConfigurationLoader {
         }
       }
 
-      state.setProperty({ key, value });
+      state.setProperty({ env: option.env, argv: option.name, shortArgv: option.shortName, value });
     });
   }
 }
