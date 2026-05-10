@@ -13,34 +13,119 @@
 ## 📋 Table of Contents
 
 - [Installation](#-installation)
-...
-<!-- EXAMPLE: -->
-<!-- - [Commands](#-commands) -->
-<!-- - [Features](#-features) -->
-<!-- - [Basic Usage](#-basic-usage) -->
-<!-- - [Detailed API](#-detailed-api) -->
-<!-- - [Architecture](#-architecture) -->
-<!-- - [Error Handling](#-error-handling) -->
-<!-- - [Advanced Examples](#-advanced-examples) -->
-...
+- [Commands](#-commands)
+- [Basic Usage](#-basic-usage)
+- [Detailed API](#-detailed-api)
 - [License](#-license)
 
 ## 🚀 Installation
 
 ```bash
-npm install alarife-cli --save-dev
+npm install @alarife/cli --save-dev
 ```
 
-...
-<!-- EXAMPLE: -->
-<!-- ## ⚙️ Commands -->
-<!-- ## ✨ Features -->
-<!-- ## 📦 Basic Usage -->
-<!-- ## 📖 Detailed API -->
-<!-- ## 🏗️ Architecture -->
-<!-- ## 🛡️ Error Handling -->
-<!-- ## 🧪 Advanced Examples -->
-...
+## ⚙️ Commands
+
+### `run`
+
+Run the specified entry point of your Alarife application.
+
+```bash
+alarife run <path>
+```
+
+| Argument | Description | Required |
+|----------|-------------|----------|
+| `path` | Path to the application entry point (e.g., `./dist/index.js`) | ✅ |
+
+**Options:**
+
+| Option | Short | Description | Type | Default | Env Variable |
+|--------|-------|-------------|------|---------|--------------|
+| `--configuration` | `-c` | Specify the configuration environment to use | `development` \| `production` \| `test` | `development` | `NODE_ENV` |
+| `--debug` | `-d` | Enable debug mode for more verbose output | `boolean` | `false` | `DEBUG_MODE` |
+| `--watch` | | Watch for file changes and automatically restart the command | `boolean` | `false` | `WATCH_MODE` |
+| `--env-file` | | Specify a custom `.env` file to load environment variables from | `path` | | |
+| `--no-banner` | | Disable the display of the banner | `boolean` | `false` | |
+| `--secure-key` | | Provide a secure key to decrypt sensitive configuration values | `string` | | |
+
+## 📦 Basic Usage
+
+1. Install the CLI as a dev dependency in your Alarife project:
+
+```bash
+npm install @alarife/cli --save-dev
+```
+
+2. Add a start script to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "start": "alarife run ./dist/index.js"
+  }
+}
+```
+
+3. Run your application:
+
+```bash
+npm start
+```
+
+**Running in production mode:**
+
+```bash
+alarife run ./dist/index.js --configuration production
+```
+
+**Running with a custom env file:**
+
+```bash
+alarife run ./dist/index.js --env-file .env.local
+```
+
+**Running in watch mode with debug enabled:**
+
+```bash
+alarife run ./dist/index.js --watch --debug
+```
+
+## 📖 Detailed API
+
+### Configuration Loading
+
+The CLI loads configuration through a layered system with the following priority (highest to lowest):
+
+1. **Command-line arguments** — Values passed directly via CLI options.
+2. **Environment variables / `.env` files** — Values loaded from environment variables or `.env` files. If no `--env-file` is specified, the CLI looks for `.env.<configuration>` (e.g., `.env.development`), falling back to `.env`.
+3. **Default values** — Default values defined in the command options.
+
+### Plugin System
+
+Alarife CLI automatically discovers plugins from your project's `node_modules`. A plugin is any package that includes an `alarife.json` file alongside its `package.json`.
+
+**`alarife.json` structure:**
+
+```json
+{
+  "cli": {
+    "commands": [],
+    "setup": "./path/to/setup.js",
+    "showVersionInBanner": true
+  }
+}
+```
+
+| Property | Description |
+|----------|-------------|
+| `commands` | List of additional commands the plugin registers. |
+| `setup` | Path to a setup script that receives the `ProgramLineInterface` instance and can extend the CLI. |
+| `showVersionInBanner` | If `true`, the plugin version is displayed in the startup banner. |
+
+### Custom Banner
+
+You can customize the startup banner by placing a `banner.txt` file in the root of your project. If no custom banner is found, the default Alarife banner is displayed.
 
 ## 📄 License
 
