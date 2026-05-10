@@ -1,14 +1,20 @@
+import { existsSync, readFileSync } from 'fs';
+import { privateDecrypt } from 'crypto';
+
 import { Option } from '@alarife/commander';
 import { ConfigurationLoader, ConfigurationState } from '@alarife/configuration';
 import dotenv from 'dotenv';
-import { NODE_ENV } from '../constants/environment';
+
 import {
   ARGV_NAME_CONFIGURATION,
   ARGV_NAME_ENV_FILE_CAMELCASE,
+  ARGV_NAME_SECURE_KEY,
   ARGV_SHORT_NAME_CONFIGURATION
 } from '../constants/arguments';
-import { existsSync } from 'fs';
 
+/**
+ * DefaultConfigurationLoader: Loads default values from the provided options.
+ */
 export class DefaultConfigurationLoader extends ConfigurationLoader {
   public priority: number = 1;
 
@@ -28,6 +34,9 @@ export class DefaultConfigurationLoader extends ConfigurationLoader {
   }
 }
 
+/**
+ * EnvConfigurationLoader: Loads values from environment variables and .env files, supporting configuration-specific .env files.
+ */
 export class EnvConfigurationLoader extends ConfigurationLoader {
   public priority: number = 2;
 
@@ -86,6 +95,9 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
   }
 }
 
+/**
+ * ArgvConfigurationLoader: Loads values directly from command-line arguments, supporting both long and short forms.
+ */
 export class ArgvConfigurationLoader extends ConfigurationLoader {
   public priority: number = 3;
 
@@ -112,55 +124,38 @@ export class ArgvConfigurationLoader extends ConfigurationLoader {
   }
 }
 
-// import crypto from 'crypto';
+const CIPHER_PREFIX = '{cipher}';
 
-// import { ConfigurationLoader } from './ConfigLoader';
-// import { ConfigurationState } from './ConfigurationState';
-// import { ENCRYPT_KEY } from './ConfigurationEnvKeys';
+/**
+ * SecureConfigurationLoader: Loads encrypted values from command-line arguments and decrypts them using a provided private key, supporting values prefixed with "{cipher}".
+ */
+export class SecureConfigurationLoader extends ConfigurationLoader {
 
-// const ALGORITHM = 'aes-256-gcm';
-// const IV_LENGTH = 16;
-// const AUTH_TAG_LENGTH = 16;
-// const CIPHER_PREFIX = 'ENC[';
+  priority: number = 4;
 
-// export interface ConfigurationPostLoader extends ConfigurationLoader {}
+  private decrypt(value: string, privateKeyPem: string): string {
+    const encryptedData = value.replace(CIPHER_PREFIX, '');
+    const decrypted = privateDecrypt(privateKeyPem, Buffer.from(encryptedData, 'base64'));
+    return decrypted.toString('utf8');
+  }
 
-// export class SecureConfigurationLoader extends ConfigurationLoader {
-//   public priority: number = 4;
-// private derivedKey?: Uint8Array;
+  load(state: ConfigurationState): void {
+    const encryptKeyPath = state.getProperty(ARGV_NAME_SECURE_KEY)?.value;
 
-// private createDerivedKey(password: string): void {
-//   this.derivedKey = new Uint8Array(crypto.scryptSync(password, 'salt', 32));
-// }
+    if (!encryptKeyPath) {
+      return;
+    }
 
-// private decrypt(cipherValue: string): string {
-//   const payload = Buffer.from(cipherValue.slice(CIPHER_PREFIX.length), 'hex');
+    if (!existsSync(encryptKeyPath)) {
+      throw new Error(`The specified key file does not exist: ${encryptKeyPath}`);
+    }
 
-//   const iv = new Uint8Array(payload.subarray(0, IV_LENGTH));
-//   const authTag = new Uint8Array(payload.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH));
-//   const encrypted = new Uint8Array(payload.subarray(IV_LENGTH + AUTH_TAG_LENGTH));
+    const privateKeyPem = readFileSync(encryptKeyPath, 'utf8');
 
-//   const decipher = crypto.createDecipheriv(ALGORITHM, this.derivedKey!, iv);
-//   decipher.setAuthTag(authTag);
-
-//   let decrypted = decipher.update(encrypted, undefined, 'utf8');
-//   decrypted += decipher.final('utf8');
-//   return decrypted;
-// }
-
-//   load(state: ConfigurationState): void {
-// console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ state:", state)
-// const encryptKey = 'age12hmtsadz37de2q85tvzvxyqs64h65fm8hlkcy8w93a4m6uglqcmq2rgerk';
-// if (!encryptKey) {
-//   return;
-// }
-// this.createDerivedKey(encryptKey);
-// state.forEach((property) => {
-//   console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ property:", property)
-//   if (property.value && typeof property.value === 'string' && property.value.includes(CIPHER_PREFIX)) {
-//     property.value = this.decrypt(property.value);
-//     console.log("🚀 ~ SecureConfigurationPostLoader ~ load ~ property.value:", property.value)
-//   }
-// });
-//   }
-// }
+    state.forEach((property) => {
+      if (property.value && typeof property.value === 'string' && property.value.includes(CIPHER_PREFIX)) {
+        property.value = this.decrypt(property.value, privateKeyPem);
+      }
+    });
+  }
+}

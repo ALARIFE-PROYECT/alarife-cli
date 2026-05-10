@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { Command, CommanderCommand, CommandEvent } from '@alarife/commander';
 import { Configuration } from '@alarife/configuration';
+import { Thread } from '@alarife/thread';
 
 import { ROOT_PATH } from '../constants/common';
 import { getJsonFile } from '../utils/file';
@@ -8,7 +9,8 @@ import { getJsonFile } from '../utils/file';
 import {
   ArgvConfigurationLoader,
   DefaultConfigurationLoader,
-  EnvConfigurationLoader
+  EnvConfigurationLoader,
+  SecureConfigurationLoader
 } from '../models/ConfigurationLoader';
 
 import { displayBanner } from '../services/banner';
@@ -23,7 +25,7 @@ import { dependencies } from '../services/dependency';
  * run ./dist/index.js
  */
 export default (event: CommandEvent, command: CommanderCommand, commandConfig: Command) => {
-  const [] = event.args;
+  const [mainPath] = event.args;
   const {} = event.options;
 
   const clientPackageJson = getJsonFile(join(ROOT_PATH, 'package.json'));
@@ -40,26 +42,24 @@ export default (event: CommandEvent, command: CommanderCommand, commandConfig: C
   const configuration = new Configuration(
     new DefaultConfigurationLoader(commandConfig.options),
     new EnvConfigurationLoader(commandConfig.options, event.options),
-    new ArgvConfigurationLoader(commandConfig.options, event.options)
+    new ArgvConfigurationLoader(commandConfig.options, event.options),
+    new SecureConfigurationLoader()
   );
   
   const state = configuration.load();
-
   const environment: Record<string, any> = {
     CONFIGURATION_STATE: state.export()
   };
+
   state.forEach((option) => {
     if(option.env) {
       environment[option.env] = option.value;
     }
   });
 
-  /**
-   * TODO: tiene que usar el nuevo repo de threads
-   * Tiene que enviar la configuracion de forma segura
-   *
-   */
-  // const value= configuration.getState().export();
-  // const thread = new Thread();
-  // thread.getRcp().emit(value);
+  const projectThread = new Thread(mainPath, {}, environment);
+
+  projectThread.on('error', (error) => {
+    console.error('Error in execution: ', error);
+  });
 };

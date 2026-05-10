@@ -6,6 +6,7 @@ import {
   ARGV_NAME_DEBUG,
   ARGV_NAME_ENV_FILE,
   ARGV_NAME_NO_BANNER,
+  ARGV_NAME_SECURE_KEY,
   ARGV_NAME_WATCH,
   ARGV_SHORT_NAME_CONFIGURATION,
   ARGV_SHORT_NAME_DEBUG
@@ -58,6 +59,11 @@ export const RUN_COMMAND: Command = {
       description: 'Disable the display of the banner.',
       descriptiveType: 'boolean',
       defaultValue: false
+    },
+    {
+      name: ARGV_NAME_SECURE_KEY,
+      description: 'Provide a secure key to decrypt sensitive configuration values.',
+      descriptiveType: 'string'
     }
   ]
 };
