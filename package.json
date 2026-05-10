@@ -41,7 +41,8 @@
   },
   "scripts": {
     "build": "npx tsc --project tsconfig.build.json",
-    "test": "npx tsc --project tsconfig.test.json && node --test \"dist/test/**/*.test.js\""
+    "pretest": "npx tsc --project tsconfig.test.json && xcopy /E /I /Y test\\mock dist\\test\\mock >nul",
+    "test": "node --test \"dist/test/**/*.test.js\""
   },
   "dependencies": {
     "@alarife/commander": "~0.6",

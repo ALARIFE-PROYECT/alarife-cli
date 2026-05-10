@@ -1,4 +1,0 @@
-
-/**
- * * Checkear la el config
- */

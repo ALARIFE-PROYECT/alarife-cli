@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { parserCli, setupCli } from "./services/command-line-interface";
+import { setupCli } from "./services/command-line-interface";
 import { discoverPlugins, setupPlugins } from "./services/dependency";
 
 
@@ -10,4 +10,4 @@ const program = setupCli();
 
 setupPlugins(program);
 
-parserCli();
+program.parse(process.argv, 'node');
