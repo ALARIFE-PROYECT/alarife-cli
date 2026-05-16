@@ -7,10 +7,12 @@ import dotenv from 'dotenv';
 
 import {
   ARGV_NAME_CONFIGURATION,
-  ARGV_NAME_ENV_FILE_CAMELCASE,
+  ARGV_NAME_ENV_FILE,
   ARGV_NAME_SECURE_KEY,
   ARGV_SHORT_NAME_CONFIGURATION
 } from '../constants/arguments';
+import { join } from 'path';
+import { ROOT_PATH } from '../constants/common';
 
 /**
  * DefaultConfigurationLoader: Loads default values from the provided options.
@@ -48,17 +50,22 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
   }
 
   private getEnvFilePath(): string | undefined {
-    const envFilePathOption = this.argvValues[ARGV_NAME_ENV_FILE_CAMELCASE];
-    if (envFilePathOption) {
-      return envFilePathOption;
+    const envFilePathOption = this.argvValues[ARGV_NAME_ENV_FILE];
+    const envFilePath = join(ROOT_PATH, envFilePathOption);
+    const envFileExists = existsSync(envFilePath);
+    if (envFilePathOption && envFileExists) {
+      return envFilePath;
+    } else if (envFilePathOption && !envFileExists) {
+      console.warn(`The specified env file does not exist: ${envFilePathOption}.`);
     }
 
-    const configuration = this.argvValues[ARGV_NAME_CONFIGURATION] || process.env[ARGV_SHORT_NAME_CONFIGURATION];
-    if (configuration) {
-      return `.env.${configuration}`;
+    const configuration = this.argvValues[ARGV_NAME_CONFIGURATION] ?? this.argvValues[ARGV_SHORT_NAME_CONFIGURATION];
+    const configurationEnvFilePath = join(ROOT_PATH, `.env.${configuration}`);
+    if (configuration && existsSync(configurationEnvFilePath)) {
+      return configurationEnvFilePath;
     }
 
-    const defaultEnvFilePath = `.env`;
+    const defaultEnvFilePath = join(ROOT_PATH, '.env');
     if (existsSync(defaultEnvFilePath)) {
       return defaultEnvFilePath;
     }
@@ -75,8 +82,8 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
     return configResult.parsed || {};
   }
 
-  load(state: ConfigurationState): void {
-    let envFilePath = this.getEnvFilePath();
+  public load(state: ConfigurationState): void {
+    const envFilePath = this.getEnvFilePath();
 
     if (envFilePath) {
       const envConfig = this.loadEnvFile(envFilePath);
@@ -130,7 +137,6 @@ const CIPHER_PREFIX = '{cipher}';
  * SecureConfigurationLoader: Loads encrypted values from command-line arguments and decrypts them using a provided private key, supporting values prefixed with "{cipher}".
  */
 export class SecureConfigurationLoader extends ConfigurationLoader {
-
   priority: number = 4;
 
   private decrypt(value: string, privateKeyPem: string): string {

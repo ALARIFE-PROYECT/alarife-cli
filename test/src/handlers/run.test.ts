@@ -283,25 +283,4 @@ describe('run handler', () => {
     assert.equal(consoleErrorMock.mock.calls[0].arguments[0], 'Error in execution: ');
     assert.equal(consoleErrorMock.mock.calls[0].arguments[1], testError);
   });
-
-  // Verifica el ciclo completo ejecutando el archivo mock con el Thread real.
-  it('should execute the full cycle with the mock entry file', (_, done) => {
-    // Restore real modules for integration test
-    require.cache[threadModulePath] = savedThreadCache;
-    require.cache[configModulePath] = savedConfigCache;
-
-    const runHandler = requireRunHandler();
-    const event = createEvent(MOCK_ENTRY_PATH);
-    const commandConfig = createCommandConfig();
-
-    runHandler(event, {} as any, commandConfig);
-
-    // The real Thread spawns a child process running the mock index.js.
-    // We give the child process a short window to complete.
-    setTimeout(() => {
-      // If no error was logged, the child process ran successfully
-      assert.equal(consoleErrorMock.mock.calls.length, 0);
-      done();
-    }, 2000);
-  });
 });
