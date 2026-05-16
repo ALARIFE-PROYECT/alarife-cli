@@ -44,7 +44,6 @@ alarife run <path>
 |--------|-------|-------------|------|---------|--------------|
 | `--configuration` | `-c` | Specify the configuration environment to use | `development` \| `production` \| `test` | `development` | `NODE_ENV` |
 | `--debug` | `-d` | Enable debug mode for more verbose output | `boolean` | `false` | `DEBUG_MODE` |
-| `--watch` | | Watch for file changes and automatically restart the command | `boolean` | `false` | `WATCH_MODE` |
 | `--env-file` | | Specify a custom `.env` file to load environment variables from | `path` | | |
 | `--no-banner` | | Disable the display of the banner | `boolean` | `false` | |
 | `--secure-key` | | Provide a secure key to decrypt sensitive configuration values | `string` | | |
@@ -83,12 +82,6 @@ alarife run ./dist/index.js --configuration production
 
 ```bash
 alarife run ./dist/index.js --env-file .env.local
-```
-
-**Running in watch mode with debug enabled:**
-
-```bash
-alarife run ./dist/index.js --watch --debug
 ```
 
 ## 📖 Detailed API

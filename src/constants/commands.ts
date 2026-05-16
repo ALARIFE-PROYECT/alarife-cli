@@ -7,11 +7,10 @@ import {
   ARGV_NAME_ENV_FILE,
   ARGV_NAME_NO_BANNER,
   ARGV_NAME_SECURE_KEY,
-  ARGV_NAME_WATCH,
   ARGV_SHORT_NAME_CONFIGURATION,
   ARGV_SHORT_NAME_DEBUG
 } from './arguments';
-import { DEVELOPMENT, ENV_DEBUG_MODE, ENV_WATCH_MODE, NODE_ENV, PRODUCTION, TEST } from './environment';
+import { DEVELOPMENT, ENV_DEBUG_MODE, NODE_ENV, PRODUCTION, TEST } from './environment';
 
 export const RUN_COMMAND: Command = {
   name: 'run',
@@ -41,13 +40,6 @@ export const RUN_COMMAND: Command = {
       descriptiveType: 'boolean',
       defaultValue: false,
       env: ENV_DEBUG_MODE
-    },
-    {
-      name: ARGV_NAME_WATCH,
-      description: 'Watch for file changes and automatically restart the command.',
-      descriptiveType: 'boolean',
-      defaultValue: false,
-      env: ENV_WATCH_MODE
     },
     {
       name: ARGV_NAME_ENV_FILE,
