@@ -98,17 +98,13 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
 
     if (envFilePath) {
       const envConfig = this.loadEnvFile(envFilePath);
-      this.options.forEach((option) => {
-        if (option.env) {
-          const value = envConfig[option.env];
-          state.setProperty({
-            env: option.env,
-            argv: option.name,
-            shortArgv: option.shortName,
-            value
-          });
-        }
-      });
+
+      for (const [key, value] of Object.entries(envConfig)) {
+        state.setProperty({
+          env: key,
+          value
+        });
+      }
     }
   }
 }
