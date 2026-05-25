@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { privateDecrypt } from 'crypto';
+import { join } from 'path';
 
 import { Option } from '@alarife/commander';
 import { ConfigurationLoader, ConfigurationState } from '@alarife/configuration';
@@ -11,7 +12,6 @@ import {
   ARGV_NAME_SECURE_KEY,
   ARGV_SHORT_NAME_CONFIGURATION
 } from '../constants/arguments';
-import { join } from 'path';
 import { ROOT_PATH } from '../constants/common';
 
 /**
@@ -50,21 +50,32 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
   }
 
   private getEnvFilePath(): string | undefined {
+    /**
+     * 1. Se comprueba el argumento --env-file
+     */
     const envFilePathOption = this.argvValues[ARGV_NAME_ENV_FILE];
-    const envFilePath = join(ROOT_PATH, envFilePathOption);
-    const envFileExists = existsSync(envFilePath);
-    if (envFilePathOption && envFileExists) {
-      return envFilePath;
-    } else if (envFilePathOption && !envFileExists) {
-      console.warn(`The specified env file does not exist: ${envFilePathOption}.`);
+    if (envFilePathOption) {
+      const envFilePath = join(ROOT_PATH, envFilePathOption);
+      const envFileExists = existsSync(envFilePath);
+      if (envFilePathOption && envFileExists) {
+        return envFilePath;
+      } else if (envFilePathOption && !envFileExists) {
+        console.warn(`The specified env file does not exist: ${envFilePathOption}.`);
+      }
     }
 
+    /**
+     * 2. Se comprueba si existe --configuration
+     */
     const configuration = this.argvValues[ARGV_NAME_CONFIGURATION] ?? this.argvValues[ARGV_SHORT_NAME_CONFIGURATION];
     const configurationEnvFilePath = join(ROOT_PATH, `.env.${configuration}`);
     if (configuration && existsSync(configurationEnvFilePath)) {
       return configurationEnvFilePath;
     }
 
+    /**
+     * 3. Se comprueba si existe el archivo .env por defecto
+     */
     const defaultEnvFilePath = join(ROOT_PATH, '.env');
     if (existsSync(defaultEnvFilePath)) {
       return defaultEnvFilePath;
