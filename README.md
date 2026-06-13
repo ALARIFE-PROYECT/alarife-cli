@@ -94,6 +94,47 @@ The CLI loads configuration through a layered system with the following priority
 2. **Environment variables / `.env` files** — Values loaded from environment variables or `.env` files. If no `--env-file` is specified, the CLI looks for `.env.<configuration>` (e.g., `.env.development`), falling back to `.env`.
 3. **Default values** — Default values defined in the command options.
 
+### Secure Configuration
+
+The CLI supports decrypting sensitive configuration values at runtime via the `--secure-key` option. Any configuration value (loaded from `.env` files, environment variables, or CLI arguments) whose string starts with the `{cipher}` prefix is automatically decrypted before being passed to the application.
+
+**Cryptographic scheme:**
+
+| Property | Value |
+|----------|-------|
+| Key type | RSA (only RSA private keys are accepted) |
+| Recommended key size | 2048 bits or higher |
+| Key format | PEM-encoded PKCS#8 private key |
+| Encryption padding | OAEP (`RSA_PKCS1_OAEP_PADDING`) |
+| OAEP hash function | SHA-256 |
+| Ciphertext encoding | Base64 |
+| Value prefix | `{cipher}` |
+
+**How it works:**
+
+1. You generate an RSA key pair (the public key is used to encrypt values, the private key to decrypt them at runtime).
+2. You encrypt each sensitive value with the public key using `RSA-OAEP` with `SHA-256`, then base64-encode the resulting ciphertext.
+3. You store each encrypted value prefixed with `{cipher}`, e.g. `DB_PASSWORD={cipher}AbCdEf...==`.
+4. At startup, you pass the path to the private key with `--secure-key`. The CLI iterates over the configuration state and decrypts every property whose value matches `{cipher}<base64>`.
+
+**Generating an RSA key pair with OpenSSL:**
+
+```bash
+# Private key (PKCS#8 PEM, used at runtime via --secure-key)
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+
+# Public key (used offline to encrypt sensitive values)
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
+**Running with a private key:**
+
+```bash
+alarife run ./dist/index.js --secure-key ./private.pem
+```
+
+> ⚠️ Only RSA private keys are accepted. Loading a key of any other type (e.g. EC, Ed25519) will throw an error at startup. Keep your private key out of version control.
+
 ### Plugin System
 
 Alarife CLI automatically discovers plugins from your project's `node_modules`. A plugin is any package that includes an `alarife.json` file alongside its `package.json`.

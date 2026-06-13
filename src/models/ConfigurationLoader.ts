@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
-import { privateDecrypt } from 'crypto';
-import { join } from 'path';
+import { privateDecrypt, createPrivateKey, constants } from 'crypto';
+import { join, resolve } from 'path';
 
 import { Option } from '@alarife/commander';
 import { ConfigurationLoader, ConfigurationState } from '@alarife/configuration';
@@ -146,9 +146,12 @@ const CIPHER_PREFIX = '{cipher}';
 export class SecureConfigurationLoader extends ConfigurationLoader {
   priority: number = 4;
 
-  private decrypt(value: string, privateKeyPem: string): string {
-    const encryptedData = value.replace(CIPHER_PREFIX, '');
-    const decrypted = privateDecrypt(privateKeyPem, Buffer.from(encryptedData, 'base64'));
+  private decrypt(value: string, privateKey: ReturnType<typeof createPrivateKey>): string {
+    const encryptedData = value.startsWith(CIPHER_PREFIX) ? value.slice(CIPHER_PREFIX.length) : value;
+    const decrypted = privateDecrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
+      Buffer.from(encryptedData, 'base64')
+    );
     return decrypted.toString('utf8');
   }
 
@@ -159,15 +162,22 @@ export class SecureConfigurationLoader extends ConfigurationLoader {
       return;
     }
 
-    if (!existsSync(encryptKeyPath)) {
+    const resolvedKeyPath = resolve(encryptKeyPath);
+
+    if (!existsSync(resolvedKeyPath)) {
       throw new Error(`The specified key file does not exist: ${encryptKeyPath}`);
     }
 
-    const privateKeyPem = readFileSync(encryptKeyPath, 'utf8');
+    const privateKeyPem = readFileSync(resolvedKeyPath, 'utf8');
+    const privateKey = createPrivateKey(privateKeyPem);
+
+    if (privateKey.asymmetricKeyType !== 'rsa') {
+      throw new Error(`Only RSA private keys are supported for decryption. Found: ${privateKey.asymmetricKeyType}`);
+    }
 
     state.forEach((property) => {
-      if (property.value && typeof property.value === 'string' && property.value.includes(CIPHER_PREFIX)) {
-        property.value = this.decrypt(property.value, privateKeyPem);
+      if (typeof property.value === 'string' && property.value.startsWith(CIPHER_PREFIX)) {
+        property.value = this.decrypt(property.value, privateKey);
       }
     });
   }
