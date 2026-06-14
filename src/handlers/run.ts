@@ -16,7 +16,6 @@ import {
 import { displayBanner } from '../services/banner';
 import { dependencies } from '../services/dependency';
 
-
 /**
  * command: run
  * argument: ./dist/index.js (path) (REQUIRED)
@@ -26,33 +25,35 @@ import { dependencies } from '../services/dependency';
  */
 export default (event: CommandEvent, command: CommanderCommand, commandConfig: Command) => {
   const [mainPath] = event.args;
-  const {} = event.options;
+  const { banner } = event.options;
 
-  const clientPackageJson = getJsonFile(join(ROOT_PATH, 'package.json'));
-  const bannerResume = [`${clientPackageJson.name} v${clientPackageJson.version}`];
+  if (banner) {
+    const clientPackageJson = getJsonFile(join(ROOT_PATH, 'package.json'));
+    const bannerResume = [`${clientPackageJson.name} v${clientPackageJson.version}`];
 
-  dependencies.forEach((dependency) => {
-    if (dependency.alarifeConfig?.cli?.showVersionInBanner) {
-      bannerResume.push(`${dependency.name} v${dependency.version}`);
-    }
-  });
+    dependencies.forEach((dependency) => {
+      if (dependency.alarifeConfig?.cli?.showVersionInBanner) {
+        bannerResume.push(`${dependency.name} v${dependency.version}`);
+      }
+    });
 
-  displayBanner(bannerResume);
+    displayBanner(bannerResume);
+  }
 
   const configuration = new Configuration(
     new DefaultConfigurationLoader(commandConfig.options),
     new EnvConfigurationLoader(commandConfig.options, event.options),
-    new ArgvConfigurationLoader(commandConfig.options, event.options),
+    new ArgvConfigurationLoader(commandConfig.options, event.configOptions),
     new SecureConfigurationLoader()
   );
-  
+
   const state = configuration.load();
   const environment: Record<string, any> = {
     CONFIGURATION_STATE: state.export()
   };
 
   state.forEach((option) => {
-    if(option.env) {
+    if (option.env) {
       environment[option.env] = option.value;
     }
   });

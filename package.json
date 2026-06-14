@@ -1,7 +1,7 @@
 {
   "name": "@alarife/cli",
   "description": "Command line interface tool for Alarife.",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "author": "Soria Garcia, Jose Eduardo <alarifeproyect@gmail.com>",
   "license": "Apache-2.0",
   "private": false,
@@ -45,7 +45,7 @@
     "test": "node --test \"dist/test/**/*.test.js\""
   },
   "dependencies": {
-    "@alarife/commander": "~0.6",
+    "@alarife/commander": "~0.8",
     "@alarife/configuration": "~0.7",
     "@alarife/thread": "~0.6",
     "@alarife/tools": "~1.0",
