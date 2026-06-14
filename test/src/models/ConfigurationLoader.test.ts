@@ -23,7 +23,7 @@ const encryptValue = (value: string, publicKey: KeyObject): string => {
 const createState = (properties: SourceProperty[], secureKeyPath?: string): any => ({
   getProperty: (key: string) => {
     if (key === ARGV_NAME_SECURE_KEY && secureKeyPath !== undefined) {
-      return { value: secureKeyPath };
+      return secureKeyPath;
     }
     return undefined;
   },

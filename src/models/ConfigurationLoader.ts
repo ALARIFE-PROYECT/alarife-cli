@@ -156,7 +156,7 @@ export class SecureConfigurationLoader extends ConfigurationLoader {
   }
 
   load(state: ConfigurationState): void {
-    const encryptKeyPath = state.getProperty(ARGV_NAME_SECURE_KEY)?.value;
+    const encryptKeyPath = state.getProperty(ARGV_NAME_SECURE_KEY);
 
     if (!encryptKeyPath) {
       return;
