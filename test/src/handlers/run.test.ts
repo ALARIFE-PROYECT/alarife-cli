@@ -39,9 +39,10 @@ describe('run handler', () => {
   let savedThreadCache: any;
   let savedConfigCache: any;
 
-  const createEvent = (mainPath: string, options: Record<string, any> = {}): CommandEvent => ({
+  const createEvent = (mainPath: string, options: Record<string, any> = {}, configOptions: Record<string, any> = {}): CommandEvent => ({
     args: [mainPath],
-    options
+    options,
+    configOptions
   });
 
   const createCommandConfig = (options: Option[] = []): Command => ({
@@ -107,7 +108,7 @@ describe('run handler', () => {
   // Verifica que se lea el package.json desde la ruta raiz del proyecto.
   it('should read the package.json from ROOT_PATH', () => {
     const runHandler = requireRunHandler();
-    const event = createEvent(MOCK_ENTRY_PATH);
+    const event = createEvent(MOCK_ENTRY_PATH, { banner: true });
     const commandConfig = createCommandConfig();
 
     runHandler(event, {} as any, commandConfig);
@@ -120,7 +121,7 @@ describe('run handler', () => {
   // Verifica que el banner se muestre con el nombre y la version de la app.
   it('should call displayBanner with the package name and version', () => {
     const runHandler = requireRunHandler();
-    const event = createEvent(MOCK_ENTRY_PATH);
+    const event = createEvent(MOCK_ENTRY_PATH, { banner: true });
     const commandConfig = createCommandConfig();
 
     runHandler(event, {} as any, commandConfig);
@@ -139,7 +140,7 @@ describe('run handler', () => {
       alarifeConfig: { cli: { commands: [], setup: '', showVersionInBanner: true } }
     });
 
-    const event = createEvent(MOCK_ENTRY_PATH);
+    const event = createEvent(MOCK_ENTRY_PATH, { banner: true });
     const commandConfig = createCommandConfig();
 
     runHandler(event, {} as any, commandConfig);
@@ -157,7 +158,7 @@ describe('run handler', () => {
       alarifeConfig: { cli: { commands: [], setup: '' } }
     });
 
-    const event = createEvent(MOCK_ENTRY_PATH);
+    const event = createEvent(MOCK_ENTRY_PATH, { banner: true });
     const commandConfig = createCommandConfig();
 
     runHandler(event, {} as any, commandConfig);
@@ -171,7 +172,7 @@ describe('run handler', () => {
     const runHandler = requireRunHandler();
     dependencies.push({ name: 'some-lib', version: '3.0.0' });
 
-    const event = createEvent(MOCK_ENTRY_PATH);
+    const event = createEvent(MOCK_ENTRY_PATH, { banner: true });
     const commandConfig = createCommandConfig();
 
     runHandler(event, {} as any, commandConfig);
