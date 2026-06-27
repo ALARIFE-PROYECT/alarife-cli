@@ -58,8 +58,7 @@ export const RUN_COMMAND: Command = {
     {
       name: ARGV_NAME_NO_BANNER,
       description: 'Disable the display of the banner.',
-      descriptiveType: 'boolean',
-      defaultValue: false
+      descriptiveType: 'boolean'
     },
     {
       name: ARGV_NAME_SECURE_KEY,
