@@ -92,25 +92,14 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
     return undefined;
   }
 
-  private loadEnvFile(path: string): Record<string, string> {
-    if (!existsSync(path)) {
-      throw new Error(`The specified env file does not exist: ${path}`);
-    }
-
-    const configResult = dotenv.config({ path });
-    return configResult.parsed || {};
-  }
-
   private getEntries(): Record<string, string> {
-    let entries: Record<string, string> = {};
-
     /**
      * * 1. Se comprueba si se ha pasado el argumento --system-env
      * Carga los valores directamente del sistema
      */
     const systemEnv = this.argvValues[ARGV_NAME_SYSTEM_ENV];
     if (systemEnv) {
-      entries = process.env as Record<string, string>;
+      return process.env as Record<string, string>;
     }
 
     /**
@@ -119,10 +108,11 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
      */
     const envFilePath = this.getEnvFilePath();
     if (envFilePath) {
-      entries = this.loadEnvFile(envFilePath);
+      const configResult = dotenv.config({ path: envFilePath });
+      return configResult.parsed ?? {};
     }
 
-    return entries;
+    return {};
   }
 
   /**

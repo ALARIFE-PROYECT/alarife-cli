@@ -303,8 +303,8 @@ describe('EnvConfigurationLoader', () => {
     assert.equal(state.properties.FROM_FILE, 'file-value');
   });
 
-  // Verifica que los valores del archivo .env sobreescriban los del sistema.
-  it('should let env file values override system environment values', () => {
+  // Verifica que system-env tenga siempre prioridad sobre el archivo .env (se ignora el .env).
+  it('should let system environment values take priority over env file values', () => {
     mock.method(fs, 'existsSync', () => true);
     mock.method(dotenv, 'config', () => ({ parsed: { SHARED: 'file-value' } }));
     process.env.SHARED = 'system-value';
@@ -317,7 +317,7 @@ describe('EnvConfigurationLoader', () => {
 
     loader.load(state as any);
 
-    assert.equal(state.properties.SHARED, 'file-value');
+    assert.equal(state.properties.SHARED, 'system-value');
 
     delete process.env.SHARED;
   });
