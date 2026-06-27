@@ -10,6 +10,7 @@ import {
   ARGV_NAME_CONFIGURATION,
   ARGV_NAME_ENV_FILE,
   ARGV_NAME_SECURE_KEY,
+  ARGV_NAME_SYSTEM_ENV,
   ARGV_SHORT_NAME_CONFIGURATION
 } from '../constants/arguments';
 import { ROOT_PATH } from '../constants/common';
@@ -49,9 +50,15 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
     super();
   }
 
+  /**
+   * Funcion de busqueda de archivo .env
+   *
+   * @returns {string | undefined} - path.
+   */
   private getEnvFilePath(): string | undefined {
     /**
-     * 1. Se comprueba el argumento --env-file
+     * * 1. Se comprueba el argumento --env-file
+     * Si existe se carga el archivo especificado, si no existe se lanza un error
      */
     const envFilePathOption = this.argvValues[ARGV_NAME_ENV_FILE];
     if (envFilePathOption) {
@@ -60,12 +67,13 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
       if (envFilePathOption && envFileExists) {
         return envFilePath;
       } else if (envFilePathOption && !envFileExists) {
-        console.warn(`The specified env file does not exist: ${envFilePathOption}.`);
+        throw new Error(`The specified env file does not exist: ${envFilePathOption}`);
       }
     }
 
     /**
-     * 2. Se comprueba si existe --configuration
+     * * 2. Se comprueba si existe --configuration
+     * se busca un archivo .env.<configuration> correspondiente
      */
     const configuration = this.argvValues[ARGV_NAME_CONFIGURATION] ?? this.argvValues[ARGV_SHORT_NAME_CONFIGURATION];
     const configurationEnvFilePath = join(ROOT_PATH, `.env.${configuration}`);
@@ -74,7 +82,7 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
     }
 
     /**
-     * 3. Se comprueba si existe el archivo .env por defecto
+     * * 3. Se comprueba si existe el archivo .env por defecto
      */
     const defaultEnvFilePath = join(ROOT_PATH, '.env');
     if (existsSync(defaultEnvFilePath)) {
@@ -93,18 +101,39 @@ export class EnvConfigurationLoader extends ConfigurationLoader {
     return configResult.parsed || {};
   }
 
-  public load(state: ConfigurationState): void {
+  private getEntries(): Record<string, string> {
+    let entries: Record<string, string> = {};
+
+    /**
+     * * 1. Se comprueba si se ha pasado el argumento --system-env
+     * Carga los valores directamente del sistema
+     */
+    const systemEnv = this.argvValues[ARGV_NAME_SYSTEM_ENV];
+    if (systemEnv) {
+      entries = process.env as Record<string, string>;
+    }
+
+    /**
+     * * 2. Se comprueba si existe archivo --env-file, .env o .env.<configuration>
+     * Carga de valores desde archivo
+     */
     const envFilePath = this.getEnvFilePath();
-
     if (envFilePath) {
-      const envConfig = this.loadEnvFile(envFilePath);
+      entries = this.loadEnvFile(envFilePath);
+    }
 
-      for (const [key, value] of Object.entries(envConfig)) {
-        state.setProperty({
-          env: key,
-          value
-        });
-      }
+    return entries;
+  }
+
+  /**
+   * Llamada de carga de configuration
+   */
+  public load(state: ConfigurationState): void {
+    for (const [key, value] of Object.entries(this.getEntries())) {
+      state.setProperty({
+        env: key,
+        value
+      });
     }
   }
 }

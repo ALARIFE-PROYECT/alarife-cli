@@ -1,12 +1,19 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import fs from 'fs';
+import dotenv from 'dotenv';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generateKeyPairSync, publicEncrypt, constants, createPrivateKey, KeyObject } from 'node:crypto';
 
-import { SecureConfigurationLoader } from '../../../src/models/ConfigurationLoader';
-import { ARGV_NAME_SECURE_KEY } from '../../../src/constants/arguments';
+import { EnvConfigurationLoader, SecureConfigurationLoader } from '../../../src/models/ConfigurationLoader';
+import {
+  ARGV_NAME_CONFIGURATION,
+  ARGV_NAME_ENV_FILE,
+  ARGV_NAME_SECURE_KEY,
+  ARGV_NAME_SYSTEM_ENV
+} from '../../../src/constants/arguments';
 
 import type { SourceProperty } from '@alarife/configuration';
 
@@ -210,5 +217,146 @@ describe('SecureConfigurationLoader', () => {
     const state = createState(properties, rsaPrivateKeyPath);
 
     assert.doesNotThrow(() => loader.load(state));
+  });
+});
+
+interface EnvState {
+  properties: Record<string, any>;
+  setProperty: (property: { env: string; value: any }) => void;
+}
+
+const createEnvState = (): EnvState => {
+  const properties: Record<string, any> = {};
+  return {
+    properties,
+    setProperty: (property: { env: string; value: any }) => {
+      properties[property.env] = property.value;
+    }
+  };
+};
+
+describe('EnvConfigurationLoader', () => {
+  afterEach(() => {
+    mock.restoreAll();
+  });
+
+  // Verifica que el loader tenga prioridad 2.
+  it('should have priority 2', () => {
+    const loader = new EnvConfigurationLoader();
+
+    assert.equal(loader.priority, 2);
+  });
+
+  // Verifica que se carguen las variables del sistema cuando --system-env esta activo.
+  it('should load values from the system environment when system-env is enabled', () => {
+    mock.method(fs, 'existsSync', () => false);
+    process.env.ALARIFE_TEST_SYSTEM_VAR = 'system-value';
+
+    const loader = new EnvConfigurationLoader([], { [ARGV_NAME_SYSTEM_ENV]: true });
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.ALARIFE_TEST_SYSTEM_VAR, 'system-value');
+
+    delete process.env.ALARIFE_TEST_SYSTEM_VAR;
+  });
+
+  // Verifica que NO se carguen las variables del sistema cuando --system-env no se proporciona.
+  it('should not load system environment variables when system-env is disabled', () => {
+    mock.method(fs, 'existsSync', () => false);
+    process.env.ALARIFE_TEST_SYSTEM_VAR = 'system-value';
+
+    const loader = new EnvConfigurationLoader([], {});
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.ALARIFE_TEST_SYSTEM_VAR, undefined);
+
+    delete process.env.ALARIFE_TEST_SYSTEM_VAR;
+  });
+
+  // Verifica que se lance una excepcion cuando el --env-file especificado no existe.
+  it('should throw an error when the specified env-file does not exist', () => {
+    mock.method(fs, 'existsSync', () => false);
+
+    const loader = new EnvConfigurationLoader([], { [ARGV_NAME_ENV_FILE]: '.env.missing' });
+    const state = createEnvState();
+
+    assert.throws(
+      () => loader.load(state as any),
+      (error: Error) => error.message.includes('The specified env file does not exist')
+    );
+  });
+
+  // Verifica que se carguen los valores desde el --env-file especificado cuando existe.
+  it('should load values from the specified env-file', () => {
+    mock.method(fs, 'existsSync', () => true);
+    mock.method(dotenv, 'config', () => ({ parsed: { FROM_FILE: 'file-value' } }));
+
+    const loader = new EnvConfigurationLoader([], { [ARGV_NAME_ENV_FILE]: '.env.custom' });
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.FROM_FILE, 'file-value');
+  });
+
+  // Verifica que los valores del archivo .env sobreescriban los del sistema.
+  it('should let env file values override system environment values', () => {
+    mock.method(fs, 'existsSync', () => true);
+    mock.method(dotenv, 'config', () => ({ parsed: { SHARED: 'file-value' } }));
+    process.env.SHARED = 'system-value';
+
+    const loader = new EnvConfigurationLoader([], {
+      [ARGV_NAME_SYSTEM_ENV]: true,
+      [ARGV_NAME_CONFIGURATION]: 'development'
+    });
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.SHARED, 'file-value');
+
+    delete process.env.SHARED;
+  });
+
+  // Verifica que se cargue el archivo .env.<configuration> correspondiente.
+  it('should load the configuration-specific env file when available', () => {
+    mock.method(fs, 'existsSync', () => true);
+    mock.method(dotenv, 'config', () => ({ parsed: { CONFIG_VAR: 'config-value' } }));
+
+    const loader = new EnvConfigurationLoader([], { [ARGV_NAME_CONFIGURATION]: 'production' });
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.CONFIG_VAR, 'config-value');
+  });
+
+  // Verifica que se cargue el archivo .env por defecto cuando no se especifica configuracion.
+  it('should load the default .env file when no specific configuration is provided', () => {
+    mock.method(fs, 'existsSync', () => true);
+    mock.method(dotenv, 'config', () => ({ parsed: { DEFAULT_VAR: 'default-value' } }));
+
+    const loader = new EnvConfigurationLoader([], {});
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(state.properties.DEFAULT_VAR, 'default-value');
+  });
+
+  // Verifica que no se establezca ninguna propiedad cuando no hay ninguna fuente de variables disponible.
+  it('should set no properties when no env source is available', () => {
+    mock.method(fs, 'existsSync', () => false);
+
+    const loader = new EnvConfigurationLoader([], {});
+    const state = createEnvState();
+
+    loader.load(state as any);
+
+    assert.equal(Object.keys(state.properties).length, 0);
   });
 });

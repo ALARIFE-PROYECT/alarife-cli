@@ -7,6 +7,7 @@ import {
   ARGV_NAME_ENV_FILE,
   ARGV_NAME_NO_BANNER,
   ARGV_NAME_SECURE_KEY,
+  ARGV_NAME_SYSTEM_ENV,
   ARGV_SHORT_NAME_CONFIGURATION,
   ARGV_SHORT_NAME_DEBUG
 } from './arguments';
@@ -45,6 +46,14 @@ export const RUN_COMMAND: Command = {
       name: ARGV_NAME_ENV_FILE,
       description: 'Specify a custom .env file to load environment variables from.',
       descriptiveType: 'path',
+      conflicts: [ARGV_NAME_SYSTEM_ENV]
+    },
+    {
+      name: ARGV_NAME_SYSTEM_ENV,
+      description: 'Load environment variables directly from the system environment.',
+      descriptiveType: 'boolean',
+      defaultValue: false,
+      conflicts: [ARGV_NAME_ENV_FILE]
     },
     {
       name: ARGV_NAME_NO_BANNER,

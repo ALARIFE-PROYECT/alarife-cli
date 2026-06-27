@@ -45,6 +45,7 @@ alarife run <path>
 | `--configuration` | `-c` | Specify the configuration environment to use | `development` \| `production` \| `test` | `development` | `NODE_ENV` |
 | `--debug` | `-d` | Enable debug mode for more verbose output | `boolean` | `false` | `DEBUG_MODE` |
 | `--env-file` | | Specify a custom `.env` file to load environment variables from | `path` | | |
+| `--system-env` | | Load environment variables directly from the system environment | `boolean` | `false` | |
 | `--no-banner` | | Disable the display of the banner | `boolean` | `false` | |
 | `--secure-key` | | Provide a secure key to decrypt sensitive configuration values | `string` | | |
 
@@ -84,6 +85,14 @@ alarife run ./dist/index.js --configuration production
 alarife run ./dist/index.js --env-file .env.local
 ```
 
+**Loading variables from the system environment:**
+
+```bash
+alarife run ./dist/index.js --system-env
+```
+
+> ⚠️ `--system-env` and `--env-file` are mutually exclusive and cannot be used together.
+
 ## 📖 Detailed API
 
 ### Configuration Loading
@@ -91,8 +100,18 @@ alarife run ./dist/index.js --env-file .env.local
 The CLI loads configuration through a layered system with the following priority (highest to lowest):
 
 1. **Command-line arguments** — Values passed directly via CLI options.
-2. **Environment variables / `.env` files** — Values loaded from environment variables or `.env` files. If no `--env-file` is specified, the CLI looks for `.env.<configuration>` (e.g., `.env.development`), falling back to `.env`.
+2. **Environment variables / `.env` files** — Values loaded from the system environment or `.env` files. If no `--env-file` is specified, the CLI looks for `.env.<configuration>` (e.g., `.env.development`), falling back to `.env`.
 3. **Default values** — Default values defined in the command options.
+
+#### Environment variable sources
+
+The `EnvConfigurationLoader` resolves environment variables from the following sources:
+
+- **`--system-env`** — When enabled, the CLI loads variables directly from the running process environment (`process.env`). Values from a `.env` file (when one is resolved) take precedence over the system environment.
+- **`--env-file <path>`** — Loads variables from the specified file. If the file does not exist, the CLI throws an error instead of silently falling back.
+- **`.env.<configuration>` / `.env`** — When no `--env-file` is provided, the CLI looks for a configuration-specific file (e.g., `.env.production`) and falls back to the default `.env` file.
+
+> ⚠️ `--system-env` and `--env-file` cannot be combined.
 
 ### Secure Configuration
 
@@ -117,21 +136,60 @@ The CLI supports decrypting sensitive configuration values at runtime via the `-
 3. You store each encrypted value prefixed with `{cipher}`, e.g. `DB_PASSWORD={cipher}AbCdEf...==`.
 4. At startup, you pass the path to the private key with `--secure-key`. The CLI iterates over the configuration state and decrypts every property whose value matches `{cipher}<base64>`.
 
-**Generating an RSA key pair with OpenSSL:**
+**Step-by-step with `@alarife/tools`:**
+
+The `@alarife/tools` package provides everything you need to generate keys and encrypt values without relying on OpenSSL.
 
 ```bash
-# Private key (PKCS#8 PEM, used at runtime via --secure-key)
-openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
-
-# Public key (used offline to encrypt sensitive values)
-openssl rsa -in private.pem -pubout -out public.pem
+npm install @alarife/tools --save-dev
 ```
 
-**Running with a private key:**
+**1. Generate an RSA key pair:**
+
+The private key is saved to the given path, and the public key is printed to stdout (redirect it to a file to keep it).
+
+```bash
+alarife-tools generate-key ./ --key-type=rsa --key-format=pem
+```
+
+> The public key is displayed in the console for management by the user.
+
+> The private key is exported as PKCS#8 PEM and the public key as SPKI PEM, matching the scheme expected at runtime.
+
+**2. Encrypt each sensitive value with the public key:**
+
+The output is already prefixed with `{cipher}`, ready to be stored.
+
+```bash
+alarife-tools encrypt "my-secret-value" ./public.pem --encoding=base64
+# => {cipher}AbCdEf...==
+```
+
+Store each encrypted value in your `.env` file (or environment), e.g.:
+
+```bash
+DB_PASSWORD={cipher}AbCdEf...==
+```
+
+**3. (Optional) Decrypt a value to verify it:**
+
+You can decrypt any `{cipher}` value with the private key to confirm it resolves correctly.
+
+```bash
+alarife-tools decrypt "{cipher}AbCdEf...==" ./private.pem --encoding=base64
+# => my-secret-value
+```
+
+
+**4. Run your application with the private key:**
+
+At startup, pass the path to the private key with `--secure-key`. The CLI automatically decrypts every `{cipher}` value before handing the configuration to your application.
 
 ```bash
 alarife run ./dist/index.js --secure-key ./private.pem
 ```
+
+> 📝 **Note:** The decrypted value only exists in memory. It is never written back to disk or persisted anywhere, so your encrypted `{cipher}` values remain the only stored representation.
 
 > ⚠️ Only RSA private keys are accepted. Loading a key of any other type (e.g. EC, Ed25519) will throw an error at startup. Keep your private key out of version control.
 
