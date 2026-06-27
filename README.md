@@ -46,7 +46,7 @@ alarife run <path>
 | `--debug` | `-d` | Enable debug mode for more verbose output | `boolean` | `false` | `DEBUG_MODE` |
 | `--env-file` | | Specify a custom `.env` file to load environment variables from | `path` | | |
 | `--system-env` | | Load environment variables directly from the system environment | `boolean` | `false` | |
-| `--no-banner` | | Disable the display of the banner | `boolean` | `false` | |
+| `--no-banner` | | Disable the display of the banner | `boolean` | | |
 | `--secure-key` | | Provide a secure key to decrypt sensitive configuration values | `string` | | |
 
 ## 📦 Basic Usage
